@@ -13,6 +13,11 @@ func TestSchemaLogicalType(t *testing.T) {
 	testSchemaInvalid(t, `{"type": "fixed", "size": 16, "logicalType": "decimal"}`, "precision")
 }
 
+func TestSchemaCustomLogicalType(t *testing.T) {
+	schema := `{"type": "string", "logicalType": "x-currency-iso4217"}`
+	testSchemaValid(t, schema)
+}
+
 func TestTimeStampMillisLogicalTypeEncode(t *testing.T) {
 	schema := `{"type": "long", "logicalType": "timestamp-millis"}`
 	testBinaryDecodeFail(t, schema, []byte(""), "short buffer")

@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 )
 
 var (
@@ -486,7 +487,8 @@ func buildCodecForTypeDescribedByMap(st map[string]*Codec, enclosingNamespace st
 func buildCodecForTypeDescribedByString(st map[string]*Codec, enclosingNamespace string, typeName string, schemaMap map[string]interface{}) (*Codec, error) {
 	searchType := typeName
 	// logicalType will be non-nil for those fields without a logicalType property set
-	if lt := schemaMap["logicalType"]; lt != nil {
+	lt := schemaMap["logicalType"]
+	if lt != nil {
 		searchType = fmt.Sprintf("%s.%s", typeName, lt)
 	}
 	// NOTE: When codec already exists, return it. This includes both primitive and
@@ -520,6 +522,13 @@ func buildCodecForTypeDescribedByString(st map[string]*Codec, enclosingNamespace
 	case "fixed.decimal":
 		return makeDecimalFixedCodec(st, enclosingNamespace, schemaMap)
 	default:
+		// Avro specification allows unrecognised logical types to fall back to avro types
+		if lt != nil{
+			if cd, ok := st[strings.Split(searchType, ".")[0]]; ok {
+				return cd, nil
+			}
+		}
+
 		return nil, fmt.Errorf("unknown type name: %q", searchType)
 	}
 }
